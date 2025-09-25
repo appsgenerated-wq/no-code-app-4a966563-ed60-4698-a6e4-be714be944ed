@@ -1,0 +1,47 @@
+name: Pearfect
+description: An application to catalog pear varieties and track harvests.
+
+entities:
+  User:
+    authenticable: true
+    properties:
+      - name
+      - { name: email, type: email, validation: { required: true, unique: true } }
+      - { name: role, type: choice, options: { values: [admin, farmer], default: farmer } }
+    access_policies:
+      - role: admin
+        permissions: [create, read, update, delete]
+      - role: farmer
+        permissions: [read, update]
+        condition: "user.id === id"
+
+  PearVariety:
+    properties:
+      - { name: name, validation: { required: true, unique: true } }
+      - { name: description, type: text }
+      - { name: origin, type: string }
+      - { name: flavorProfile, type: choice, options: { values: [sweet, tart, mild, buttery, crisp] } }
+      - { name: image, type: image, options: { sizes: { thumbnail: { width: 400, height: 300 } } } }
+    access_policies:
+      - role: admin
+        permissions: [create, read, update, delete]
+      - role: farmer
+        permissions: [read]
+      - role: unauthenticated
+        permissions: [read]
+
+  Harvest:
+    properties:
+      - { name: harvestDate, type: date, validation: { required: true } }
+      - { name: quantity, type: number, options: { suffix: ' kg' }, validation: { required: true } }
+      - { name: qualityRating, type: number, options: { min: 1, max: 5 } }
+      - { name: notes, type: text }
+    belongsTo:
+      - { name: farmer, entity: User }
+      - { name: pearVariety, entity: PearVariety }
+    access_policies:
+      - role: admin
+        permissions: [create, read, update, delete]
+      - role: farmer
+        permissions: [create, read, update, delete]
+        condition: "user.id === farmer.id"
